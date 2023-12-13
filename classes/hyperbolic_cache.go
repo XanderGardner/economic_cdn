@@ -1,6 +1,7 @@
 package classes
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -15,7 +16,7 @@ type HyperbolicCache struct {
 // CacheItem represents an item in the Hyperbolic cache.
 type CacheItem struct {
 	key, value      int
-	time, frequency int64
+	frequency, time int64
 }
 
 // NewHyperbolicCache creates a new Hyperbolic cache with the given capacity.
@@ -83,10 +84,11 @@ func randomSample(m map[int]*CacheItem, sampleSize int) map[int]*CacheItem {
 func (hc *HyperbolicCache) evict() {
 	minScore := math.MaxFloat64
 	var minKey int
-	sample := randomSample(hc.cache, 5)
+	sample := randomSample(hc.cache, len(hc.cache))
 
 	for key, item := range sample {
 		score := float64(item.frequency) / float64(time.Now().UnixNano()-item.time)
+		fmt.Println(score)
 		if score < minScore {
 			minScore = score
 			minKey = key
