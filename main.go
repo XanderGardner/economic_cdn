@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"main/messagereceiver"
+	"github.com/xander/economic_cdn/classes"
 )
 
 func main() {
 	fmt.Println("Hello, World!")
 
 	// Create a new MessageReceiver instance
-	messageReceiver := NewMessageReceiver(8080)
+	messageReceiver := classes.NewMessageReceiver(8080)
 
 	// Start listening for incoming messages
 	if err := messageReceiver.StartListening(); err != nil {
@@ -17,7 +17,7 @@ func main() {
 	}
 
 	// Create a new MessageSender instance
-	messageSender := NewMessageSender("http://localhost:8080")
+	messageSender := classes.NewMessageSender("http://localhost:8080")
 
 	
 

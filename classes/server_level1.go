@@ -1,4 +1,4 @@
-package messagereceiver
+package classes
 
 import (
 	"fmt"

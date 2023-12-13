@@ -6,7 +6,7 @@
 go run main.go
 ```
 
-# run testing
+# run testing in classes
 ```
-go test
+go test ./classes
 ```
