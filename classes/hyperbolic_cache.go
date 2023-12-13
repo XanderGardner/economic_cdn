@@ -87,6 +87,8 @@ func (hc *HyperbolicCache) evict() {
 	sample := randomSample(hc.cache, len(hc.cache))
 
 	for key, item := range sample {
+		fmt.Println(item.key)
+		fmt.Println(time.Now().UnixNano() - item.time)
 		score := float64(item.frequency) / float64(time.Now().UnixNano()-item.time)
 		fmt.Println(score)
 		if score < minScore {

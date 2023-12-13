@@ -3,6 +3,7 @@ package classes
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 // TestHyperbolicCache tests the HyperbolicCache functionality.
@@ -24,6 +25,8 @@ func TestHyperbolicCache(t *testing.T) {
 	fmt.Println(cache.cache[1])
 	cache.Put(2, 2)
 	cache.Put(3, 3)
+	duration := 5 * time.Second
+	time.Sleep(duration)
 	cache.Put(4, 4)
 
 	result = cache.Get(1)
