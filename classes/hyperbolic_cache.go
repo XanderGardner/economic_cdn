@@ -2,6 +2,8 @@ package classes
 
 import (
 	"math"
+	"math/rand"
+	"time"
 )
 
 // HyperbolicCache represents a simple Hyperbolic cache.
@@ -12,8 +14,8 @@ type HyperbolicCache struct {
 
 // CacheItem represents an item in the Hyperbolic cache.
 type CacheItem struct {
-	key, value, frequency int
-	score                float64
+	key, value      int
+	time, frequency int64
 }
 
 // NewHyperbolicCache creates a new Hyperbolic cache with the given capacity.
@@ -28,7 +30,6 @@ func NewHyperbolicCache(capacity int) *HyperbolicCache {
 func (hc *HyperbolicCache) Get(key int) int {
 	if item, ok := hc.cache[key]; ok {
 		item.frequency++
-		item.score = hyperbolicScore(item.frequency)
 		return item.value
 	}
 	return -1
@@ -44,10 +45,9 @@ func (hc *HyperbolicCache) Put(key, value int) {
 		// Update existing item.
 		item.value = value
 		item.frequency++
-		item.score = hyperbolicScore(item.frequency)
 	} else {
 		// Add new item.
-		item := &CacheItem{key, value, 1, hyperbolicScore(1)}
+		item := &CacheItem{key, value, 1, time.Now().UnixNano()}
 		hc.cache[key] = item
 
 		// If the cache is full, evict the item with the lowest score.
@@ -57,23 +57,41 @@ func (hc *HyperbolicCache) Put(key, value int) {
 	}
 }
 
+func randomSample(m map[int]*CacheItem, sampleSize int) map[int]*CacheItem {
+	rand.Seed(time.Now().UnixNano())
+
+	// Convert map keys to a slice
+	keys := make([]int, 0, len(m))
+	for key := range m {
+		keys = append(keys, key)
+	}
+
+	// Shuffle the keys
+	rand.Shuffle(len(keys), func(i, j int) {
+		keys[i], keys[j] = keys[j], keys[i]
+	})
+
+	result := make(map[int]*CacheItem)
+	for i := 0; i < sampleSize && i < len(keys); i++ {
+		result[keys[i]] = m[keys[i]]
+	}
+
+	return result
+}
+
 // evict removes the item with the lowest score from the Hyperbolic cache.
 func (hc *HyperbolicCache) evict() {
 	minScore := math.MaxFloat64
 	var minKey int
+	sample := randomSample(hc.cache, 5)
 
-	for key, item := range hc.cache {
-		if item.score < minScore {
-			minScore = item.score
+	for key, item := range sample {
+		score := float64(item.frequency) / float64(time.Now().UnixNano()-item.time)
+		if score < minScore {
+			minScore = score
 			minKey = key
 		}
 	}
 
 	delete(hc.cache, minKey)
-}
-
-// hyperbolicScore computes the hyperbolic score based on frequency.
-func hyperbolicScore(frequency int) float64 {
-	// Hyperbolic scoring function: score = 1 / (frequency + 1).
-	return 1.0 / float64(frequency+1)
 }
