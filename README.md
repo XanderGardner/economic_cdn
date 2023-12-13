@@ -1,4 +1,12 @@
 # economic_cdn
 
 
-sai it is time to work on this project. hard work pays off. time to wake up
+# run main code
+```
+go run main.go
+```
+
+# run testing
+```
+go test
+```
