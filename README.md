@@ -49,12 +49,7 @@ go run user/main.go 8083 ./user/books/starwars_wiki.txt
 
 # run testing
 
-hyerbolic cache testing
+run cache testing
 ```
-go test ./hyperbolic_cache
-```
-
-queue based caches testing
-```
-go test ./queue_caches
+go test ./caches
 ```

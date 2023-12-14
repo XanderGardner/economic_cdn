@@ -12,6 +12,7 @@ import (
 // and serving requests
 type OriginServerStats struct {
 	Port int
+	
 }
 
 // NewOriginServerStats creates a new instance of OriginServerStats with the given port
@@ -36,6 +37,7 @@ func (mr *OriginServerStats) StartListening() error {
 		fmt.Printf("Received message: %s\n", body)
 
 
+
 	}
 
 	// Start the server on the specified port
@@ -43,6 +45,18 @@ func (mr *OriginServerStats) StartListening() error {
 	fmt.Printf("Server listening on :%d\n", mr.Port)
 	return http.ListenAndServe(fmt.Sprintf(":%d", mr.Port), nil)
 }
+
+
+
+
+func (mr *OriginServerStats) PrintUpdatedStats() {
+	fmt.Printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+
+}
+
+
+
+
 
 func main() {
 	// Default port
