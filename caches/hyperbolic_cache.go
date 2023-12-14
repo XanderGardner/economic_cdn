@@ -114,7 +114,7 @@ func randomSample(m map[string]*CacheItem, sampleSize int) map[string]*CacheItem
 func (hc *HyperbolicCache) evict() {
 	minScore := math.MaxFloat64
 	var minKey string
-	sample := randomSample(hc.cache, len(hc.cache))
+	sample := randomSample(hc.cache, min(len(hc.cache), 64))
 
 	for key, item := range sample {
 		fmt.Println(item.key)

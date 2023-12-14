@@ -1,70 +1,57 @@
 package cache
 
 import (
-	"fmt"
+	//"fmt"
 	"testing"
-	"time"
+	//"time"
 )
 
 // TestHyperbolicCache tests the HyperbolicCache functionality.
 func TestHyperbolicCache(t *testing.T) {
-	cache := NewHyperbolicCache(3)
+	// Set up the cache
+	c := NewHyperbolicCache(100)
 
-	// Test initial state
-	result := cache.Get(1)
-	expected := -1
-	if result != expected {
-		t.Errorf("Get(1): got %d, want %d", result, expected)
+	key := "testKey"
+	value := []byte("testValue")
+
+	// Test Set and Get
+	if !c.Set(key, value) {
+		t.Error("Failed to set value in cache")
 	}
 
-	// Test Put and Get
-	cache.Put(1, 1)
-	fmt.Println(cache.Get(1))
-	fmt.Println(cache.Get(1))
-	fmt.Println(cache.Get(1))
-	fmt.Println(cache.cache[1])
-	cache.Put(2, 2)
-	cache.Put(3, 3)
-	duration := 5 * time.Second
-	time.Sleep(duration)
-	cache.Put(4, 4)
-
-	result = cache.Get(1)
-	expected = 1
-	if result != expected {
-		t.Errorf("Get(1): got %d, want %d", result, expected)
+	val, ok := c.Get(key)
+	if !ok || string(val) != string(value) {
+		t.Error("Failed to retrieve value from cache")
 	}
 
-	result = cache.Get(2)
-	expected = -1
-	if result != expected {
-		t.Errorf("Get(2): got %d, want %d", result, expected)
+	// Test Remove
+	val, ok = c.Remove(key)
+	if !ok || string(val) != string(value) {
+		t.Error("Failed to remove value from cache")
 	}
 
-	// After Put(3), item with key 2 should be evicted
-	result = cache.Get(1)
-	expected = 1
-	if result != expected {
-		t.Errorf("Get(2) after Put(3): got %d, want %d", result, expected)
+	// Ensure the key is no longer present in the cache
+	if _, ok := c.Get(key); ok {
+		t.Error("Key still exists in cache after removal")
 	}
 
-	// After Put(4), item with key 1 should be evicted
-	result = cache.Get(1)
-	expected = 1
-	if result != expected {
-		t.Errorf("Get(1) after Put(4): got %d, want %d", result, expected)
+	// Test cache eviction
+	c = NewHyperbolicCache(50)
+
+	for i := 0; i < 10; i++ {
+		k := string(rune(i + 65)) // 'A', 'B', 'C', ...
+		v := make([]byte, 5)
+		c.Set(k, v)
 	}
 
-	// Check other values
-	result = cache.Get(3)
-	expected = 3
-	if result != expected {
-		t.Errorf("Get(3): got %d, want %d", result, expected)
+	exceedKey := "exceedKey"
+	exceedValue := make([]byte, 60)
+	if c.Set(exceedKey, exceedValue) {
+		t.Error("Item larger than cache capacity was added")
 	}
 
-	result = cache.Get(4)
-	expected = 4
-	if result != expected {
-		t.Errorf("Get(4): got %d, want %d", result, expected)
+	if c.Len() != 10 {
+		t.Error("Cache did not reach maximum capacity")
 	}
+
 }
