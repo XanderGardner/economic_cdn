@@ -7,19 +7,26 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"github.com/xander/economic_cdn/caches"
+	// "github.com/xander/economic_cdn/conversion"
 )
+
 
 // MessageReceiver is a simple class for receiving messages on a specific port.
 type MessageReceiver struct {
 	UserPort int
 	Level2Port int
+	ServerCache cache.Cache 
 }
 
 // NewMessageReceiver creates a new instance of MessageReceiver with the given port.
 func NewMessageReceiver(user_port int, level2_port int) *MessageReceiver {
+	LEVEL1_CACHE_SIZE := 500
+
 	return &MessageReceiver{
 		UserPort: user_port,
 		Level2Port: level2_port,
+		ServerCache: cache.NewFifo(LEVEL1_CACHE_SIZE),
 	}
 }
 
@@ -32,15 +39,35 @@ func (mr *MessageReceiver) StartListening() error {
 			http.Error(w, "Error reading request body", http.StatusBadRequest)
 			return
 		}
+		key_requested := string(body)
 
 		// handle the incoming message
 		fmt.Printf("Received message: %s\n", body)
-		
-		// send to level 2
-		level2_response, err := mr.SendMessage(string(body))
 
-		// respond to user
-		w.Write([]byte(level2_response))
+		// check if the body is in the cache
+		byte_val, ok := mr.ServerCache.Get(key_requested)
+
+		if ok {
+			// already in current cache
+			fmt.Printf("    Cache Hit\n")
+			
+			// respond to user
+			w.Write(byte_val)
+		} else {
+			// not in current cache
+			fmt.Printf("    Cache Miss\n")
+
+			// request from level 2
+			level2_response, _ := mr.SendMessage(key_requested)
+
+			// respond to user
+			w.Write([]byte(level2_response))
+
+			// add to cache
+			mr.ServerCache.Set(key_requested, []byte(level2_response))
+
+		}
+		
 	}
 
 	// Start the server on the specified port
@@ -70,6 +97,16 @@ func (mr *MessageReceiver) SendMessage(message string) (string, error) {
 
 	return string(responseBody), nil
 }
+
+
+
+
+
+
+
+
+
+
 
 func main() {
 	// Default port

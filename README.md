@@ -10,17 +10,21 @@ run origin server
 ```
 go run origin_server/main.go receive_port
 ```
+run origin server stats
+```
+go run origin_server_stats/main.go receive_port
+```
 run server level 2
 ```
-go run server_level2/main.go receive_port send_port
+go run server_level2/main.go receive_port origin_server_port origin_stats_port
 ```
 run server level 1
 ```
-go run server_level1/main.go receive_port send_port
+go run server_level1/main.go receive_port level2_port origin_stats_port
 ```
 run user
 ```
-go run user/main.go send_port text_file_path
+go run user/main.go level1_port text_file_path
 ```
 
 # example run
