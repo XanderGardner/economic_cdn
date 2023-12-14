@@ -4,7 +4,7 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/xander/economic_cdn/queue_caches"
+	"github.com/xander/economic_cdn/caches"
 )
 
 func intToBytes(n int) []byte {
