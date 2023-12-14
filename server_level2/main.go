@@ -35,7 +35,12 @@ func (mr *MessageReceiver) StartListening() error {
 
 		// handle the incoming message
 		fmt.Printf("Received message: %s\n", body)
-		mr.SendMessage(string(body))
+		origin_response, err := mr.SendMessage(string(body))
+
+		// respond to user
+		w.Write([]byte(origin_response))
+		
+
 	}
 
 	// Start the server on the specified port
@@ -44,20 +49,26 @@ func (mr *MessageReceiver) StartListening() error {
 	return http.ListenAndServe(fmt.Sprintf(":%d", mr.UserPort), nil)
 }
 
-// SendMessage sends a message to the specified port.
-func (mr *MessageReceiver) SendMessage(message string) error {
+// SendMessage sends a message to the specified port and retursn the response, err.
+func (mr *MessageReceiver) SendMessage(message string) (string, error) {
 	url := fmt.Sprintf("http://localhost:%d", mr.Level2Port)
 	resp, err := http.Post(url, "text/plain", strings.NewReader(message))
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Error sending message. Status: %s", resp.Status)
+		return "", fmt.Errorf("Error sending message. Status: %s", resp.Status)
 	}
 
-	return nil
+	// Read the response body
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("Error reading response body: %v", err)
+	}
+
+	return string(responseBody), nil
 }
 
 func main() {

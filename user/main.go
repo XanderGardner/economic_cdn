@@ -42,6 +42,15 @@ func (ms *MessageSender) SendMessage(message string) error {
 		return fmt.Errorf("Error sending message. Status: %s", resp.Status)
 	}
 
+	// Read the response body
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("Error reading response body: %s\n", err)
+	}
+
+	// Print the response content
+	fmt.Printf("    Got CDN response: " + string(body) + "\n")
+
 	return nil
 }
 
@@ -63,8 +72,6 @@ func keepAlphabeticAndSpaces(input string) string {
 
 	return string(result)
 }
-
-
 
 // Pauses the process execution for a random duration around one second
 func randomPause() {
@@ -122,6 +129,7 @@ func main() {
 	for _, word := range words {
 		
 		// Send the word to the cdn (request the value, which is the lenght of the string)
+		fmt.Printf("Reqesting \"" + word + "\" from CDN" + "\n")
 		err := sender.SendMessage(word)
 		if err != nil {
 			fmt.Printf("Error sending message: %s\n", err)
