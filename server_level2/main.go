@@ -11,21 +11,28 @@ import (
 	// "github.com/xander/economic_cdn/conversion"
 )
 
+
 // MessageReceiver is a simple class for receiving messages on a specific port.
 type MessageReceiver struct {
+	ServerName string
 	UserPort int
 	Level2Port int
-	ServerCache cache.Cache
+	StatsPort int
+	ServerCache cache.Cache 
+	CurrentRequestCount int
 }
 
 // NewMessageReceiver creates a new instance of MessageReceiver with the given port.
-func NewMessageReceiver(user_port int, origin_port int) *MessageReceiver {
-	LEVEL2_CACHE_SIZE := 1000
+func NewMessageReceiver(server_name string, user_port int, level2_port int, stats_port int) *MessageReceiver {
+	LEVEL2_CACHE_SIZE := 15000
 
 	return &MessageReceiver{
+		ServerName: server_name,
 		UserPort: user_port,
-		Level2Port: origin_port,
+		Level2Port: level2_port,
+		StatsPort: stats_port,
 		ServerCache: cache.NewFifo(LEVEL2_CACHE_SIZE),
+		CurrentRequestCount: 0,
 	}
 }
 
@@ -38,7 +45,6 @@ func (mr *MessageReceiver) StartListening() error {
 			http.Error(w, "Error reading request body", http.StatusBadRequest)
 			return
 		}
-
 		key_requested := string(body)
 
 		// handle the incoming message
@@ -57,17 +63,25 @@ func (mr *MessageReceiver) StartListening() error {
 			// not in current cache
 			fmt.Printf("    Cache Miss\n")
 
-			// request from origin
-			origin_response, _ := mr.SendMessage(key_requested)
+			// request from level 2
+			level2_response, _ := mr.SendMessage(key_requested)
 
 			// respond to user
-			w.Write([]byte(origin_response))
+			w.Write([]byte(level2_response))
 
 			// add to cache
-			mr.ServerCache.Set(key_requested, []byte(origin_response))
+			mr.ServerCache.Set(key_requested, []byte(level2_response))
 
 		}
-	
+
+		// handle the increased number of requests if needed
+		mr.CurrentRequestCount += 1
+		if mr.CurrentRequestCount > 10 {
+			mr.SendStatUpdate()
+			mr.CurrentRequestCount = 0
+		}
+
+		
 	}
 
 	// Start the server on the specified port
@@ -76,7 +90,7 @@ func (mr *MessageReceiver) StartListening() error {
 	return http.ListenAndServe(fmt.Sprintf(":%d", mr.UserPort), nil)
 }
 
-// SendMessage sends a message to the specified port and retursn the response, err.
+// SendMessage sends a message to the specified port.
 func (mr *MessageReceiver) SendMessage(message string) (string, error) {
 	url := fmt.Sprintf("http://localhost:%d", mr.Level2Port)
 	resp, err := http.Post(url, "text/plain", strings.NewReader(message))
@@ -98,23 +112,46 @@ func (mr *MessageReceiver) SendMessage(message string) (string, error) {
 	return string(responseBody), nil
 }
 
+// SendMessage sends a message to the specified port.
+func (mr *MessageReceiver) SendStatUpdate() {
+	url := fmt.Sprintf("http://localhost:%d", mr.StatsPort)
+	http.Post(url, "text/plain", strings.NewReader(mr.ServerName))
+}
+
+
+
+
+
+
+
+
+
+
+
 func main() {
 	// Default port
 	default_user_port := 8080
-	default_origin_port := 8081
+	default_level2_port := 8081
+	default_stats_port := 8087
+	default_name := "unknown_server"
 
 	// Check if a port is provided as a command-line argument
-	if len(os.Args) > 2 {
+	if len(os.Args) > 4 {
 		port1, err1 := strconv.Atoi(os.Args[1])
 		port2, err2 := strconv.Atoi(os.Args[2])
-		if err1 == nil && err2 == nil {
+		port3, err3 := strconv.Atoi(os.Args[3])
+		if err1 == nil && err2 == nil && err3 == nil {
 			default_user_port = port1
-			default_origin_port = port2
+			default_level2_port = port2
+			default_stats_port = port3
+			default_name = os.Args[4]
 		}
+	} else {
+		return
 	}
 
 	// Create an instance of MessageReceiver with the specified port
-	receiver := NewMessageReceiver(default_user_port, default_origin_port)
+	receiver := NewMessageReceiver(default_name, default_user_port, default_level2_port, default_stats_port)
 
 	// Start listening for incoming messages
 	err := receiver.StartListening()

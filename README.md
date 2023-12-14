@@ -8,7 +8,7 @@ Description here
 
 run origin server
 ```
-go run origin_server/main.go receive_port
+go run origin_server/main.go receive_port origin_stats_port server_name
 ```
 run origin server stats
 ```
@@ -16,11 +16,11 @@ go run origin_server_stats/main.go receive_port
 ```
 run server level 2
 ```
-go run server_level2/main.go receive_port origin_server_port origin_stats_port
+go run server_level2/main.go receive_port origin_server_port origin_stats_port server_name
 ```
 run server level 1
 ```
-go run server_level1/main.go receive_port level2_port origin_stats_port
+go run server_level1/main.go receive_port level2_port origin_stats_port server_name
 ```
 run user
 ```
@@ -30,13 +30,14 @@ go run user/main.go level1_port text_file_path
 # example run
 
 ```
-go run origin_server/main.go 8086
-go run server_level2/main.go 8084 8086
-go run server_level2/main.go 8085 8086
-go run server_level1/main.go 8080 8084
-go run server_level1/main.go 8081 8084
-go run server_level1/main.go 8082 8085
-go run server_level1/main.go 8083 8085
+go run origin_server_stats/main.go 8087 
+go run origin_server/main.go 8086 8087 origin
+go run server_level2/main.go 8084 8086 8087 l2_server1
+go run server_level2/main.go 8085 8086 8087 l2_server2
+go run server_level1/main.go 8080 8084 8087 l1_server1
+go run server_level1/main.go 8081 8084 8087 l1_server2
+go run server_level1/main.go 8082 8085 8087 l1_server3
+go run server_level1/main.go 8083 8085 8087 l1_server4
 go run user/main.go 8080 ./user/books/bacteria_wiki.txt
 go run user/main.go 8080 ./user/books/bumble_wiki.txt
 go run user/main.go 8081 ./user/books/godzilla_wiki.txt

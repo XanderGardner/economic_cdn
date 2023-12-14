@@ -14,19 +14,25 @@ import (
 
 // MessageReceiver is a simple class for receiving messages on a specific port.
 type MessageReceiver struct {
+	ServerName string
 	UserPort int
 	Level2Port int
+	StatsPort int
 	ServerCache cache.Cache 
+	CurrentRequestCount int
 }
 
 // NewMessageReceiver creates a new instance of MessageReceiver with the given port.
-func NewMessageReceiver(user_port int, level2_port int) *MessageReceiver {
-	LEVEL1_CACHE_SIZE := 500
+func NewMessageReceiver(server_name string, user_port int, level2_port int, stats_port int) *MessageReceiver {
+	LEVEL1_CACHE_SIZE := 5000
 
 	return &MessageReceiver{
+		ServerName: server_name,
 		UserPort: user_port,
 		Level2Port: level2_port,
+		StatsPort: stats_port,
 		ServerCache: cache.NewFifo(LEVEL1_CACHE_SIZE),
+		CurrentRequestCount: 0,
 	}
 }
 
@@ -67,6 +73,14 @@ func (mr *MessageReceiver) StartListening() error {
 			mr.ServerCache.Set(key_requested, []byte(level2_response))
 
 		}
+
+		// handle the increased number of requests if needed
+		mr.CurrentRequestCount += 1
+		if mr.CurrentRequestCount > 10 {
+			mr.SendStatUpdate()
+			mr.CurrentRequestCount = 0
+		}
+
 		
 	}
 
@@ -98,6 +112,12 @@ func (mr *MessageReceiver) SendMessage(message string) (string, error) {
 	return string(responseBody), nil
 }
 
+// SendMessage sends a message to the specified port.
+func (mr *MessageReceiver) SendStatUpdate() {
+	url := fmt.Sprintf("http://localhost:%d", mr.StatsPort)
+	http.Post(url, "text/plain", strings.NewReader(mr.ServerName))
+}
+
 
 
 
@@ -112,19 +132,26 @@ func main() {
 	// Default port
 	default_user_port := 8080
 	default_level2_port := 8081
+	default_stats_port := 8087
+	default_name := "unknown_server"
 
 	// Check if a port is provided as a command-line argument
-	if len(os.Args) > 2 {
+	if len(os.Args) > 4 {
 		port1, err1 := strconv.Atoi(os.Args[1])
 		port2, err2 := strconv.Atoi(os.Args[2])
-		if err1 == nil && err2 == nil {
+		port3, err3 := strconv.Atoi(os.Args[3])
+		if err1 == nil && err2 == nil && err3 == nil {
 			default_user_port = port1
 			default_level2_port = port2
+			default_stats_port = port3
+			default_name = os.Args[4]
 		}
+	} else {
+		return
 	}
 
 	// Create an instance of MessageReceiver with the specified port
-	receiver := NewMessageReceiver(default_user_port, default_level2_port)
+	receiver := NewMessageReceiver(default_name, default_user_port, default_level2_port, default_stats_port)
 
 	// Start listening for incoming messages
 	err := receiver.StartListening()

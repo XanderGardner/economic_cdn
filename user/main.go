@@ -78,9 +78,9 @@ func randomPause() {
 	// Seed the random number generator with the current time
 	rand.Seed(time.Now().UnixNano())
 
-	// Generate a random duration between 0.5 and 1.5 seconds
-	minDuration := 500 * time.Millisecond
-	maxDuration := 1500 * time.Millisecond
+	// Generate a random duration between 0.1 and 0.5 seconds
+	minDuration := 100 * time.Millisecond
+	maxDuration := 500 * time.Millisecond
 	randomDuration := time.Duration(rand.Int63n(int64(maxDuration-minDuration)) + int64(minDuration))
 
 	// Pause for the generated random duration

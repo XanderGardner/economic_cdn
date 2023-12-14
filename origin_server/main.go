@@ -12,15 +12,21 @@ import (
 // OriginServer is a representation of an origin server listening at a port
 // and serving requests
 type OriginServer struct {
+	ServerName string
 	Level2Port int
 	Database map[string]int
+	StatsPort int
+	CurrentRequestCount int
 }
 
 // NewOriginServer creates a new instance of OriginServer with the given port
-func NewOriginServer(level2_port int) *OriginServer {
+func NewOriginServer(server_name string, level2_port int, stats_port int) *OriginServer {
 	return &OriginServer{
+		ServerName: server_name,
 		Level2Port: level2_port,
 		Database: make(map[string]int),
+		StatsPort: stats_port,
+		CurrentRequestCount: 0,
 	}
 }
 
@@ -48,6 +54,13 @@ func (mr *OriginServer) StartListening() error {
 			w.Write([]byte(response))
 		}
 
+		// handle the increased number of requests if needed
+		mr.CurrentRequestCount += 1
+		if mr.CurrentRequestCount > 10 {
+			mr.SendStatUpdate()
+			mr.CurrentRequestCount = 0
+		}
+
 	}
 
 	// Start the server on the specified port
@@ -72,20 +85,37 @@ func (mr *OriginServer) SendMessage(message string) error {
 	return nil
 }
 
+// SendMessage sends a message to the specified port.
+func (mr *OriginServer) SendStatUpdate() {
+	url := fmt.Sprintf("http://localhost:%d", mr.StatsPort)
+	http.Post(url, "text/plain", strings.NewReader(mr.ServerName))
+}
+
+
+
+
 func main() {
 	// Default port
 	default_level2_port := 8080
+	default_stats_port := 8087
+	default_server_name := "origin"
 
 	// Check if a port is provided as a command-line argument
 	if len(os.Args) > 1 {
 		port1, err1 := strconv.Atoi(os.Args[1])
-		if err1 == nil{
+		port2, err2 := strconv.Atoi(os.Args[2])
+		if err1 == nil && err2 == nil {
 			default_level2_port = port1
+			default_stats_port = port2
 		}
+		default_server_name = os.Args[3]
+
+	} else {
+		return
 	}
 
 	// Create an instance of OriginServer with the specified port
-	receiver := NewOriginServer(default_level2_port)
+	receiver := NewOriginServer(default_server_name, default_level2_port, default_stats_port)
 
 	// Start listening for incoming messages
 	err := receiver.StartListening()
