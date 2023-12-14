@@ -10,12 +10,15 @@ import (
 // HyperbolicCache represents a simple Hyperbolic cache.
 type HyperbolicCache struct {
 	capacity int
-	cache    map[int]*CacheItem
+	used     int
+	cache    map[string]*CacheItem
+	stats    Stats
 }
 
 // CacheItem represents an item in the Hyperbolic cache.
 type CacheItem struct {
-	key, value      int
+	key             string
+	value           []byte
 	frequency, time int64
 }
 
@@ -23,23 +26,48 @@ type CacheItem struct {
 func NewHyperbolicCache(capacity int) *HyperbolicCache {
 	return &HyperbolicCache{
 		capacity: capacity,
-		cache:    make(map[int]*CacheItem),
+		used:     0,
+		cache:    make(map[string]*CacheItem),
+		stats: Stats{
+			Hits:   0,
+			Misses: 0,
+		},
 	}
+}
+
+func (hc *HyperbolicCache) MaxStorage() int {
+	return hc.capacity
+}
+func (hc *HyperbolicCache) RemainingStorage() int {
+	return hc.capacity - hc.used
 }
 
 // Get retrieves the value associated with the key in the Hyperbolic cache.
-func (hc *HyperbolicCache) Get(key int) int {
+func (hc *HyperbolicCache) Get(key string) (value []byte, ok bool) {
 	if item, ok := hc.cache[key]; ok {
+		hc.stats.Hits += 1
 		item.frequency++
-		return item.value
+		return item.value, true
 	}
-	return -1
+	hc.stats.Misses += 1
+	return nil, false
+}
+
+// Remove
+func (hc *HyperbolicCache) Remove(key string) (value []byte, ok bool) {
+	if item, ok := hc.cache[key]; ok {
+		hc.used -= len(key) + len(item.value)
+		delete(hc.cache, key)
+		return item.value, true
+	} else {
+		return nil, false
+	}
 }
 
 // Put inserts a key-value pair into the Hyperbolic cache.
-func (hc *HyperbolicCache) Put(key, value int) {
-	if hc.capacity == 0 {
-		return
+func (hc *HyperbolicCache) Set(key string, value []byte) bool {
+	if len(key)+len(value) > hc.capacity {
+		return false
 	}
 
 	if item, ok := hc.cache[key]; ok {
@@ -50,19 +78,21 @@ func (hc *HyperbolicCache) Put(key, value int) {
 		// Add new item.
 		item := &CacheItem{key, value, 1, time.Now().UnixNano()}
 		hc.cache[key] = item
-
+		hc.used += len(key) + len(value)
 		// If the cache is full, evict the item with the lowest score.
-		if len(hc.cache) > hc.capacity {
+		for len(hc.cache) > hc.capacity {
 			hc.evict()
 		}
 	}
+
+	return true
 }
 
-func randomSample(m map[int]*CacheItem, sampleSize int) map[int]*CacheItem {
+func randomSample(m map[string]*CacheItem, sampleSize int) map[string]*CacheItem {
 	rand.Seed(time.Now().UnixNano())
 
 	// Convert map keys to a slice
-	keys := make([]int, 0, len(m))
+	keys := make([]string, 0, len(m))
 	for key := range m {
 		keys = append(keys, key)
 	}
@@ -72,7 +102,7 @@ func randomSample(m map[int]*CacheItem, sampleSize int) map[int]*CacheItem {
 		keys[i], keys[j] = keys[j], keys[i]
 	})
 
-	result := make(map[int]*CacheItem)
+	result := make(map[string]*CacheItem)
 	for i := 0; i < sampleSize && i < len(keys); i++ {
 		result[keys[i]] = m[keys[i]]
 	}
@@ -83,7 +113,7 @@ func randomSample(m map[int]*CacheItem, sampleSize int) map[int]*CacheItem {
 // evict removes the item with the lowest score from the Hyperbolic cache.
 func (hc *HyperbolicCache) evict() {
 	minScore := math.MaxFloat64
-	var minKey int
+	var minKey string
 	sample := randomSample(hc.cache, len(hc.cache))
 
 	for key, item := range sample {
@@ -96,6 +126,12 @@ func (hc *HyperbolicCache) evict() {
 			minKey = key
 		}
 	}
-
+	hc.used -= len(minKey) + len(hc.cache[minKey].value)
 	delete(hc.cache, minKey)
+}
+func (hc *HyperbolicCache) Len() int {
+	return len(hc.cache)
+}
+func (hc *HyperbolicCache) Stats() *Stats {
+	return &hc.stats
 }
