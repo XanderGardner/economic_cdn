@@ -1,8 +1,5 @@
 # economic_cdn
 
-reminder: make sure hyperbolic cache has all functions implemented (and evaluated in our presentation) from the cache interface
-
-Description here
 
 # run main code
 
@@ -30,6 +27,7 @@ go run user/main.go level1_port text_file_path
 
 # example run
 
+This is an example run with hyperbolic caching
 ```
 go run origin_server_stats/main.go 8087 
 go run origin_server/main.go 8086 8087 origin
