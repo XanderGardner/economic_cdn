@@ -1,4 +1,4 @@
-package classes
+package main
 
 import (
 	"bytes"
@@ -27,3 +27,9 @@ func (ms *MessageSender) SendMessage(message string) error {
 	fmt.Println("Message sent successfully!")
 	return nil
 }
+
+func main() {
+	fmt.Println("Hello from folder1/file1!")
+}
+
+

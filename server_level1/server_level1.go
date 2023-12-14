@@ -1,4 +1,4 @@
-package classes
+package main
 
 import (
 	"fmt"
@@ -33,4 +33,8 @@ func (mr *MessageReceiver) StartListening() error {
 	http.HandleFunc("/", handler)
 	fmt.Printf("Server listening on :%d\n", mr.Port)
 	return http.ListenAndServe(fmt.Sprintf(":%d", mr.Port), nil)
+}
+
+func main() {
+	fmt.Println("Hello from folder1/file1!")
 }
