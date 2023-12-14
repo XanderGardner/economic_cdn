@@ -23,17 +23,38 @@ type MessageReceiver struct {
 }
 
 // NewMessageReceiver creates a new instance of MessageReceiver with the given port.
-func NewMessageReceiver(server_name string, user_port int, level2_port int, stats_port int) *MessageReceiver {
-	LEVEL2_CACHE_SIZE := 15000
+func NewMessageReceiver(server_name string, user_port int, level2_port int, stats_port int, cache_number int) *MessageReceiver {
+	LEVEL2_CACHE_SIZE := 5000000
 
-	return &MessageReceiver{
-		ServerName: server_name,
-		UserPort: user_port,
-		Level2Port: level2_port,
-		StatsPort: stats_port,
-		ServerCache: cache.NewFifo(LEVEL2_CACHE_SIZE),
-		CurrentRequestCount: 0,
-	}
+	// cache_number decides the cache: 1 for lru, 2 for fifo, 3 for hyperbolic
+	if cache_number == 1 {
+		return &MessageReceiver{
+			ServerName: server_name,
+			UserPort: user_port,
+			Level2Port: level2_port,
+			StatsPort: stats_port,
+			ServerCache: cache.NewLru(LEVEL2_CACHE_SIZE),
+			CurrentRequestCount: 0,
+		}
+	} else if cache_number == 2 {
+		return &MessageReceiver{
+			ServerName: server_name,
+			UserPort: user_port,
+			Level2Port: level2_port,
+			StatsPort: stats_port,
+			ServerCache: cache.NewFifo(LEVEL2_CACHE_SIZE),
+			CurrentRequestCount: 0,
+		}
+	} else {
+		return &MessageReceiver{
+			ServerName: server_name,
+			UserPort: user_port,
+			Level2Port: level2_port,
+			StatsPort: stats_port,
+			ServerCache: cache.NewHyperbolicCache(LEVEL2_CACHE_SIZE),
+			CurrentRequestCount: 0,
+		}
+	}	
 }
 
 // StartListening starts the message receiver and listens for incoming messages.
@@ -134,24 +155,27 @@ func main() {
 	default_level2_port := 8081
 	default_stats_port := 8087
 	default_name := "unknown_server"
+	cache_number := 1
 
 	// Check if a port is provided as a command-line argument
-	if len(os.Args) > 4 {
+	if len(os.Args) > 5 {
 		port1, err1 := strconv.Atoi(os.Args[1])
 		port2, err2 := strconv.Atoi(os.Args[2])
 		port3, err3 := strconv.Atoi(os.Args[3])
-		if err1 == nil && err2 == nil && err3 == nil {
+		cache_num, err4 := strconv.Atoi(os.Args[5])
+		if err1 == nil && err2 == nil && err3 == nil && err4 == nil {
 			default_user_port = port1
 			default_level2_port = port2
 			default_stats_port = port3
 			default_name = os.Args[4]
+			cache_number = cache_num
 		}
 	} else {
 		return
 	}
 
 	// Create an instance of MessageReceiver with the specified port
-	receiver := NewMessageReceiver(default_name, default_user_port, default_level2_port, default_stats_port)
+	receiver := NewMessageReceiver(default_name, default_user_port, default_level2_port, default_stats_port, cache_number)
 
 	// Start listening for incoming messages
 	err := receiver.StartListening()
