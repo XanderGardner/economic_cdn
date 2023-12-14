@@ -1,5 +1,7 @@
 # economic_cdn
 
+reminder: make sure hyperbolic cache has all functions implemented (and evaluated in our presentation) from the cache interface
+
 Description here
 
 # run main code
