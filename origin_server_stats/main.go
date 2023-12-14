@@ -12,7 +12,7 @@ import (
 // and serving requests
 type OriginServerStats struct {
 	Port int
-	
+	RequestsPerSecond map[string]int 
 }
 
 // NewOriginServerStats creates a new instance of OriginServerStats with the given port
@@ -35,6 +35,9 @@ func (mr *OriginServerStats) StartListening() error {
 		
 		// handle the incoming message
 		fmt.Printf("Received message: %s\n", body)
+
+		// body conains just a string with the name of the server that sent the request meaning that that server got 10 messages. 
+		// now we can update the time for all the servers
 
 
 
