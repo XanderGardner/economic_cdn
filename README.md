@@ -1,7 +1,8 @@
 # economic_cdn
 
+We implement a Multi-Layered CDN with Hyperbolic Caching and a Health Monitoring System.
 
-# run main code
+# run cdn code
 
 run origin server
 ```
@@ -12,7 +13,7 @@ run origin server stats
 go run origin_server_stats/main.go receive_port
 ```
 run server level 2
-cache_number decides the cache: 1 for lru, 2 for fifo, 3 for hyperbolic
+(cache_number decides the cache: 1 for lru, 2 for fifo, 3 for hyperbolic)
 ```
 go run server_level2/main.go receive_port origin_server_port origin_stats_port server_name cache_number
 ```
@@ -25,7 +26,7 @@ run user
 go run user/main.go level1_port text_file_path
 ```
 
-# example run
+# example cdn run
 
 This is an example run of a 2 layer CDN with hyperbolic caching
 ```
@@ -87,17 +88,11 @@ Running with Hyperbolic on 1 Layer CDN results in about
 - level 2: 4 requests per second
 - level 1: 4 requests per second
 
-# run testing
-
-run cache testing
-```
-go test ./caches
-```
-
-# cache performance evaluation
+# run cache performance evaluation
 ```
 go run ./cache_performance/main.go file_path
 ```
+Running for each example text input gives:
 ```
 economic_cdn main % go run ./cache_performance/main.go ./user/books/bacteria_wiki.txt
 LRU Hit Rate: 0.657841
@@ -131,4 +126,11 @@ economic_cdn main % go run ./cache_performance/main.go ./user/books/starwars_wik
 LRU Hit Rate: 0.671937
 Fifo Hit Rate: 0.644964
 Hyperbolic Hit Rate: 0.705554
+```
+
+# unit testing
+
+run cache testing
+```
+go test ./caches
 ```
