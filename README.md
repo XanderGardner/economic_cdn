@@ -27,7 +27,7 @@ go run user/main.go level1_port text_file_path
 
 # example run
 
-This is an example run with hyperbolic caching
+This is an example run of a 2 layer CDN with hyperbolic caching
 ```
 go run origin_server_stats/main.go 8087 
 go run origin_server/main.go 8086 8087 origin
@@ -46,6 +46,46 @@ go run user/main.go 8082 ./user/books/moby_thick.txt
 go run user/main.go 8083 ./user/books/moby_wiki.txt
 go run user/main.go 8083 ./user/books/starwars_wiki.txt
 ```
+
+This is an example run of a 1 layer CDN with hyperbolic caching
+```
+go run origin_server_stats/main.go 8087 
+go run origin_server/main.go 8086 8087 origin
+go run server_level2/main.go 8084 8086 8087 l2_server1 3  
+go run server_level2/main.go 8085 8086 8087 l2_server2 3 
+go run server_level1/main.go 8080 8086 8087 l1_server1 3 
+go run server_level1/main.go 8081 8086 8087 l1_server2 3 
+go run server_level1/main.go 8082 8086 8087 l1_server3 3 
+go run server_level1/main.go 8083 8086 8087 l1_server4 3 
+go run user/main.go 8080 ./user/books/bacteria_wiki.txt
+go run user/main.go 8084 ./user/books/bumble_wiki.txt
+go run user/main.go 8084 ./user/books/godzilla_wiki.txt
+go run user/main.go 8081 ./user/books/mammal_wiki.txt
+go run user/main.go 8082 ./user/books/moby_dick.txt
+go run user/main.go 8085 ./user/books/moby_thick.txt
+go run user/main.go 8085 ./user/books/moby_wiki.txt
+go run user/main.go 8083 ./user/books/starwars_wiki.txt
+```
+
+Running with FIFO on 2 Layer CDN result in about 
+- origin: 13 requests per second
+- level 2: 7 requests per second
+- level 1: 7 requests per second
+
+Running with LRU on 2 Layer CDN result in about 
+- origin: 12 requests per second
+- level 2: 6.5 requests per second
+- level 1: 7.5 requests per second
+
+Running with Hyperbolic on 2 Layer CDN result in about 
+- origin: 13 requests per second
+- level 2: 7 requests per second
+- level 1: 7 requests per second
+
+Running with Hyperbolic on 1 Layer CDN results in about
+- origin: 20 requests per second
+- level 2: 4 requests per second
+- level 1: 4 requests per second
 
 # run testing
 
