@@ -53,3 +53,42 @@ run cache testing
 ```
 go test ./caches
 ```
+
+# cache performance evaluation
+```
+go run ./cache_performance/main.go file_path
+```
+```
+economic_cdn main % go run ./cache_performance/main.go ./user/books/bacteria_wiki.txt
+LRU Hit Rate: 0.657841
+Fifo Hit Rate: 0.624422
+Hyperbolic Hit Rate: 0.711183
+economic_cdn main % go run ./cache_performance/main.go ./user/books/bumble_wiki.txt  
+LRU Hit Rate: 0.655849
+Fifo Hit Rate: 0.626415
+Hyperbolic Hit Rate: 0.684075
+economic_cdn main % go run ./cache_performance/main.go ./user/books/godzilla_wiki.txt 
+LRU Hit Rate: 0.623461
+Fifo Hit Rate: 0.603841
+Hyperbolic Hit Rate: 0.643081
+economic_cdn main % go run ./cache_performance/main.go ./user/books/mammal_wiki.txt  
+LRU Hit Rate: 0.647523
+Fifo Hit Rate: 0.615518
+Hyperbolic Hit Rate: 0.717130
+economic_cdn main % go run ./cache_performance/main.go ./user/books/moby_dick.txt  
+LRU Hit Rate: 0.664141
+Fifo Hit Rate: 0.625730
+Hyperbolic Hit Rate: 0.742928
+economic_cdn main % go run ./cache_performance/main.go ./user/books/moby_thick.txt 
+LRU Hit Rate: 0.644812
+Fifo Hit Rate: 0.606336
+Hyperbolic Hit Rate: 0.713223
+economic_cdn main % go run ./cache_performance/main.go ./user/books/moby_wiki.txt 
+LRU Hit Rate: 0.652166
+Fifo Hit Rate: 0.621065
+Hyperbolic Hit Rate: 0.707789
+economic_cdn main % go run ./cache_performance/main.go ./user/books/starwars_wiki.txt 
+LRU Hit Rate: 0.671937
+Fifo Hit Rate: 0.644964
+Hyperbolic Hit Rate: 0.705554
+```
